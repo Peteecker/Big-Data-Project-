@@ -126,10 +126,88 @@ def submit_post(
 
     redirect_to_logout = False
 
+    # T1:
+    # A post must not be published if the author already has negative fame
+    # in at least one expertise area assigned to this post.
+    # This rule is independent of the truth rating of the new post.
+    for expertise_area_and_rating in _expertise_areas:
+        expertise_area = expertise_area_and_rating["expertise_area"]
 
-    #########################
-    # add your code here
-    #########################
+        # Check whether the current user has a fame entry for this expertise area
+        # and whether that fame level is negative.
+        user_has_negative_fame_in_area = Fame.objects.filter(
+            user=user,
+            expertise_area=expertise_area,
+            fame_level__numeric_value__lt=0,
+        ).exists()
+
+        # If the user has negative fame in this expertise area,
+        # the post is recorded in the database, but it must not be published.
+        if user_has_negative_fame_in_area:
+            post.published = False
+            break
+
+    # T2:
+    # If the post has a negative truth rating in an expertise area,
+    # the author's fame profile must be adjusted for exactly that expertise area.
+    for expertise_area_and_rating in _expertise_areas:
+        expertise_area = expertise_area_and_rating["expertise_area"]
+        truth_rating = expertise_area_and_rating["truth_rating"]
+
+        # Only negative truth ratings influence the fame profile.
+        # If there is no truth rating or the truth rating is non-negative,
+        # nothing has to be changed for this expertise area.
+        if truth_rating is None or truth_rating.numeric_value >= 0:
+            continue
+
+        try:
+            # T2a:
+            # Try to find an existing fame entry for this user and expertise area.
+            fame_entry = Fame.objects.get(
+                user=user,
+                expertise_area=expertise_area,
+            )
+
+            try:
+                # If the fame entry exists, lower it to the next lower fame level.
+                # The method get_next_lower_fame_level() is defined in FameLevels.
+                fame_entry.fame_level = fame_entry.fame_level.get_next_lower_fame_level()
+                fame_entry.save()
+
+            except ValueError:
+                # T2c:
+                # If there is no lower fame level anymore, the user must be banned.
+                # In this case, the old fame level remains unchanged.
+                user.is_active = False
+                user.is_banned = True
+                user.save()
+
+                # All posts of this user must be unpublished,
+                # but they must stay in the database.
+                Posts.objects.filter(author=user).update(published=False)
+
+                # The newly submitted post is also unpublished.
+                post.published = False
+
+                # Signal to the view that the user should be logged out
+                # and redirected to the login page.
+                redirect_to_logout = True
+
+                # Once the user is banned, we do not need to process more areas.
+                break
+
+        except Fame.DoesNotExist:
+            # T2b:
+            # If the user has no fame entry for this expertise area yet,
+            # create a new negative fame entry with fame level "Confuser".
+            confuser_level = FameLevels.objects.get(name="Confuser")
+
+            Fame.objects.create(
+                user=user,
+                expertise_area=expertise_area,
+                fame_level=confuser_level,
+            )
+
 
     post.save()
 
