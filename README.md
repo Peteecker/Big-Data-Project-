@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Preliminary
 
 You need [pipenv](https://pipenv.pypa.io/en/latest/) to run the project. For the recommended installation, please run the following command on your machine:
@@ -63,3 +64,6 @@ Use the script
 recreate_models_and_data.sh
 ```
 to recreate the migrations, database, fake data and fixtures.
+=======
+# Big-Data-Project-
+>>>>>>> 8832d78804a64e3ebf78786bc71b36fe38bec32b
