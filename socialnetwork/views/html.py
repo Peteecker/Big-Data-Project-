@@ -94,4 +94,13 @@ def leave_community(request):
 @require_http_methods(["GET"])
 @login_required
 def similar_users(request):
-    raise NotImplementedError("Not implemented yet")
+    """Displays similar user for the user if logged in."""
+    user = _get_social_network_user(request.user) # user object of the current user
+    similar_users_qs = api.similar_users(user) # user objects that are similar according to the similar users api
+
+    # context: content that should be inserted into the template
+    context = {
+        "similar_users": similar_users_qs,
+    }
+
+    return render(request, "similar_users.html", context=context)

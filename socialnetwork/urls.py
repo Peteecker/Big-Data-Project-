@@ -4,6 +4,7 @@ from socialnetwork.views.html import timeline
 from socialnetwork.views.html import follow
 from socialnetwork.views.html import unfollow
 from socialnetwork.views.rest import PostsListApiView
+from socialnetwork.views.html import similar_users
 
 app_name = "socialnetwork"
 
@@ -12,4 +13,5 @@ urlpatterns = [
     path("html/timeline", timeline, name="timeline"),
     path("api/follow", follow, name="follow"),
     path("api/unfollow", unfollow, name="unfollow"),
+    path("html/similar_users", similar_users, name="similar_users"),
 ]

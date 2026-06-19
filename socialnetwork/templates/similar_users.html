@@ -1,0 +1,45 @@
+{% extends "base.html" %} <!-- uses base.html as a template and inserts the content of this file -->
+
+<!-- 
+copilot added this but is probably unnecessary since it's not used: 
+    {% load static %}
+    {% load highlight %} 
+-->
+
+{% block title %}Similar Users{% endblock %}
+
+{% block body %} <!-- specifies that the following should be inserted where base.html has the block "body" -->
+
+    <br>
+    <h2>Similar Users</h2>
+    <p>Users with similar expertise areas and fame levels:</p>
+    <br>
+
+    {% if similar_users %}
+        {% for users in similar_users %}
+            <div class="card" style="margin-bottom: 20px; margin-left: 40px; margin-right: 40px;"> 
+                <div class="flex-container">
+                    <b><a href="/fame/html/fame?userid={{ user.id }}"> {{ user.first_name }} {{user.last_name}} </a></b> <!-- user name as clickable link that leads to profile ig? -->
+                    <span style="color: gray">{{ user.email }}</span>
+                    <span style="color:gray">Joined: {{ user.date_joined }}</span>
+                </div>
+                <div>
+                    <b>Similarity Score:</b> {{ user.similarity|floatformat:2 }} <!-- floatformat:2 rounds to 2 decimals -->
+                </div>
+                <br>
+                <div>
+                    <form action="/sn/api/follow" method="post" style="display:inline;"> <!-- performs "follow" using a "form" -->
+                        <input type="hidden" name="user_id" value="{{ user.id }}"> <!-- the user id is hidden but still part of the form and submitted when button is pressed -->
+                        <button type="submit" class="btn btn-secondary">Follow</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="card" style="margin-bottom: 20px; margin-left: 40px; margin-right: 40px;">
+            <p>No similar users found.</p>
+        </div>
+    {% endif %}
+    <br>
+
+    {% endblock %}
