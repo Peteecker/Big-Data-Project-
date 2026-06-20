@@ -18,6 +18,60 @@
         </form>
     </div>
     <br>
+    
+    <!-- Community Mode Toggle -->
+    <div class="card" style="margin-bottom: 20px; margin-left: 40px; margin-right: 40px;">
+        <form action="/sn/html/toggle_community_mode" method="post" style="display: inline;">
+            <button type="submit" class="btn {% if community_mode %}btn-primary{% else %}btn-secondary{% endif %}">
+                {% if community_mode %}Community Mode (ON){% else %}Standard Mode{% endif %} <!-- switches text of the button depending on mode -->
+            </button>
+        </form>
+    </div>
+    <br>
+    
+    <!-- Communities Overview -->
+    <div class="card" style="margin-bottom: 20px; margin-left: 40px; margin-right: 40px;">
+        <h5>My Communities</h5>
+        {% if user_communities %}
+            <div style="margin-bottom: 10px;">
+                {% for community in user_communities %}
+                    <!-- builds list of joined communities -->
+                    <div style="margin: 5px 0;">
+                        <span>{{ community.label }}</span>
+                        <form action="/sn/html/leave_community" method="post" style="display: inline;">
+                            <input type="hidden" name="community_id" value="{{ community.id }}">
+                            <button type="submit" class="btn btn-sm btn-danger">Leave</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: gray;">You are not a member of any communities yet.</p>
+        {% endif %}
+    </div>
+    <br>
+    
+    <!-- Eligible Communities -->
+    <div class="card" style="margin-bottom: 20px; margin-left: 40px; margin-right: 40px;">
+        <h5>Available Communities</h5>
+        {% if eligible_communities %}
+            <div style="margin-bottom: 10px;">
+                {% for community in eligible_communities %}
+                <!-- builds list of eligible communities -->
+                    <div style="margin: 5px 0;">
+                        <span>{{ community.label }}</span>
+                        <form action="/sn/html/join_community" method="post" style="display: inline;">
+                            <input type="hidden" name="community_id" value="{{ community.id }}">
+                            <button type="submit" class="btn btn-sm btn-success">Join</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: gray;">No communities available for you. Increase your fame level to join!</p>
+        {% endif %}
+    </div>
+    <br>
     <div class="card" style="margin-bottom: 20px; margin-left: 40px; margin-right: 40px;">
         <form action="/sn/api/posts" method="post">
             {% csrf_token %}

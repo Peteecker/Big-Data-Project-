@@ -7,6 +7,9 @@ from socialnetwork import api
 from socialnetwork.api import _get_social_network_user
 from socialnetwork.models import SocialNetworkUsers
 from socialnetwork.serializers import PostsSerializer
+from fame.models import ExpertiseAreas
+from fame.models import Fame
+from fame.models import FameLevels
 
 
 @require_http_methods(["GET"])
@@ -19,11 +22,14 @@ def timeline(request):
     if 'community_mode' not in request.session:
         request.session['community_mode'] = False
 
+    user = _get_social_network_user(request.user)
+    community_mode = request.session.get('community_mode', False) # checks if session has a community mode setting, defaults to false if not
 
     # get extra URL parameters:
     keyword = request.GET.get("search", "")
     published = request.GET.get("published", True)
     error = request.GET.get("error", None)
+    
 
     # if keyword is not empty, use search method of API:
     if keyword and keyword != "":
@@ -33,21 +39,34 @@ def timeline(request):
             ).data,
             "searchkeyword": keyword,
             "error": error,
-            "followers": list(api.follows(_get_social_network_user(request.user)).values_list('id', flat=True)),
+            "followers": list(api.follows(user).values_list('id', flat=True)),
         }
     else:  # otherwise, use timeline method of API:
+        # Get user's communities and eligible communities
+        user_communities = user.communities.all()
+        
+        # Get eligible communities (user has Super Pro or above fame, i.e. >= 100)
+        eligible_communities = []
+        # expertise areas where user has fame >= 100:
+        eligible_fame = Fame.objects.filter(user=user, fame_level__numeric_value__gte=100).values_list('expertise_area', flat=True)
+        # communities where user is not a member but could join
+        eligible_communities = ExpertiseAreas.objects.filter(id__in=eligible_fame).exclude(id__in=user_communities)
 
         context = {
             "posts": PostsSerializer(
                 api.timeline(
-                    _get_social_network_user(request.user),
+                    user,
                     published=published,
+                    community_mode=community_mode, # include mode
                 ),
                 many=True,
             ).data,
             "searchkeyword": "",
             "error": error,
-            "followers": list(api.follows(_get_social_network_user(request.user)).values_list('id', flat=True)),
+            "followers": list(api.follows(user).values_list('id', flat=True)),
+            "community_mode": community_mode,
+            "user_communities": user_communities,
+            "eligible_communities": eligible_communities,
         }
 
     return render(request, "timeline.html", context=context)
@@ -79,17 +98,37 @@ def bullshitters(request):
 @require_http_methods(["POST"])
 @login_required
 def toggle_community_mode(request):
-    raise NotImplementedError("Not implemented yet")
+    """Switches between standard and community mode if logged in."""
+    request.session['community_mode'] = not request.session.get('community_mode', False)
+    return redirect(reverse("sn:timeline"))
 
 @require_http_methods(["POST"])
 @login_required
 def join_community(request):
-    raise NotImplementedError("Not implemented yet")
+    """Adds the user to a community if eligible."""
+    user = _get_social_network_user(request.user)
+    community_id = request.POST.get("community_id")
+    community = ExpertiseAreas.objects.get(id=community_id)
+    
+    # Check if user has Super Pro or above fame in this expertise area
+    fame_entry = Fame.objects.filter(user=user, expertise_area=community).first()
+    if fame_entry and fame_entry.fame_level.numeric_value >= 100:
+        api.join_community(user, community)
+    
+    return redirect(reverse("sn:timeline"))
 
 @require_http_methods(["POST"])
 @login_required
 def leave_community(request):
-    raise NotImplementedError("Not implemented yet")
+    """Removes the user from a community if they're a member."""
+    user = _get_social_network_user(request.user)
+    community_id = request.POST.get("community_id")
+    community = ExpertiseAreas.objects.get(id=community_id)
+    
+    if user.communities.filter(id=community.id).exists():
+        api.leave_community(user, community)
+    
+    return redirect(reverse("sn:timeline"))
 
 @require_http_methods(["GET"])
 @login_required
