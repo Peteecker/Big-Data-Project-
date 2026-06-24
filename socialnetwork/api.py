@@ -28,10 +28,22 @@ def timeline(user: SocialNetworkUsers, start: int = 0, end: int = None, publishe
         # 3. the post contains the community’s expertise area
         # 4. the post is published or the user is the author
 
-        pass
+        #pass
         #########################
         # add your code here
         #########################
+
+        # T4 c
+        posts = Posts.objects.none()            # create empty QuerySet
+        communities_of_user = user.communities.all()    # get all communities of the user
+
+        for community in communities_of_user:           # 2 -> "user is a member of the community" => iterate through only the users communities
+            posts = posts| Posts.objects.filter(        # add posts that follow all the criteria
+                Q(author__communities = community) &                        # 1-> posts in which the author is in that same (current) community
+                Q(expertise_area_and_truth_ratings = community) &            # 3 (Posts -> PostExpertiseAreasAndRatings -> expertise_area) = current cummunity
+                ((Q(published= True)) | Q( author = user))                                     # 4 
+                ).distinct().order_by("-submitted")        # remove duplicates and order by newest post first              
+
 
     else:
         # in standard mode, posts of followed users are displayed
@@ -174,6 +186,11 @@ def submit_post(
                 fame_entry.fame_level = fame_entry.fame_level.get_next_lower_fame_level()
                 fame_entry.save()
 
+                # T4 d 
+                # if the fame level is below Super Pro (=100) -> remove from community 
+                if fame_entry.fame_level.numeric_value < 100:
+                    user.communities.remove(expertise_area)
+
             except ValueError:
                 # T2c:
                 # If there is no lower fame level anymore, the user must be banned.
@@ -207,6 +224,11 @@ def submit_post(
                 expertise_area=expertise_area,
                 fame_level=confuser_level,
             )
+
+            # T4 d
+            # if the fame level is below Super Pro (=100) -> remove from community 
+            if confuser_level.numeric_value <100:
+                user.communities.remove(expertise_area)
 
 
     post.save()
@@ -266,10 +288,37 @@ def bullshitters():
     users with the lowest fame are shown first, in case there is a tie, within that tie sort by date_joined
     (most recent first). Note that expertise areas with no expert may be omitted.
     """
-    pass
+    #pass
     #########################
     # add your code here
     #########################
+
+
+    """ expertise_area -> ( list of users having negative fame (list contains dictionaries with users -> user , fame_level_numeric-> corresponding value) )"""
+
+    #T3
+    erg = {}
+
+    # filter users having a negative fame for that expertise area and order by those vlaues (asc)
+    neg_fame_entries = Fame.objects.filter(fame_level__numeric_value__lt =  0).order_by("fame_level__numeric_value" , "-user__date_joined")
+
+    # "expertise areas with no bullshitters may be omitted" -> iterate only through negative entries
+    for x in neg_fame_entries: 
+        if x.expertise_area not in erg:
+                
+                # add new key with that expertise_area and add an empty list for the values (users)
+                erg[x.expertise_area] = []
+        
+        # for key=expertise_area add the values to the list 
+        erg[x.expertise_area].append(
+            {
+                "user": x.user,
+                "fame_level_numeric" : x.fame_level.numeric_value 
+            }
+        )
+    return erg 
+        
+
 
 
 
@@ -279,19 +328,29 @@ def join_community(user: SocialNetworkUsers, community: ExpertiseAreas):
     """Join a specified community. Note that this method does not check whether the user is eligible for joining the
     community.
     """
-    pass
+    #pass
     #########################
     # add your code here
     #########################
+
+    # T4 b
+    user.communities.add(community)     
+    user.save()
+
+
 
 
 
 def leave_community(user: SocialNetworkUsers, community: ExpertiseAreas):
     """Leave a specified community."""
-    pass
+    #pass
     #########################
     # add your code here
     #########################
+
+    # T4 b
+    user.communities.remove(community)     
+    user.save()
 
 
 
