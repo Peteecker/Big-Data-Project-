@@ -44,7 +44,6 @@ def timeline(user: SocialNetworkUsers, start: int = 0, end: int = None, publishe
                 ((Q(published= True)) | Q( author = user))                                     # 4 
                 ).distinct().order_by("-submitted")        # remove duplicates and order by newest post first              
 
-
     else:
         # in standard mode, posts of followed users are displayed
         _follows = user.follows.all()
