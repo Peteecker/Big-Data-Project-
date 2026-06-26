@@ -45,7 +45,7 @@ def timeline(request):
         # Get user's communities and eligible communities
         user_communities = user.communities.all()
         
-        # Get eligible communities (user has Super Pro or above fame, i.e. >= 100)
+        # Create empty list for eligible communities (user has Super Pro or above fame, i.e. >= 100)
         eligible_communities = []
         # expertise areas where user has fame >= 100:
         eligible_fame = Fame.objects.filter(user=user, fame_level__numeric_value__gte=100).values_list('expertise_area', flat=True)
@@ -57,7 +57,7 @@ def timeline(request):
                 api.timeline(
                     user,
                     published=published,
-                    community_mode=community_mode, # include mode
+                    community_mode=community_mode, # include community / normal mode
                 ),
                 many=True,
             ).data,
@@ -111,11 +111,11 @@ def join_community(request):
     community = ExpertiseAreas.objects.get(id=community_id)
     
     # Check if user has Super Pro or above fame in this expertise area
-    fame_entry = Fame.objects.filter(user=user, expertise_area=community).first()
-    if fame_entry and fame_entry.fame_level.numeric_value >= 100:
+    fame_entry = Fame.objects.filter(user=user, expertise_area=community).get()
+    if fame_entry.fame_level.numeric_value >= 100:
         api.join_community(user, community)
     
-    return redirect(reverse("sn:timeline"))
+    return redirect(reverse("sn:timeline")) # reverse generates the entire URL for the timeline view
 
 @require_http_methods(["POST"])
 @login_required
@@ -125,10 +125,11 @@ def leave_community(request):
     community_id = request.POST.get("community_id")
     community = ExpertiseAreas.objects.get(id=community_id)
     
+    # Check if user is member of that community
     if user.communities.filter(id=community.id).exists():
         api.leave_community(user, community)
     
-    return redirect(reverse("sn:timeline"))
+    return redirect(reverse("sn:timeline")) # reverse generates the entire URL for the timeline view
 
 @require_http_methods(["GET"])
 @login_required
@@ -137,7 +138,7 @@ def similar_users(request):
     user = _get_social_network_user(request.user) # user object of the current user
     similar_users_qs = api.similar_users(user) # user objects that are similar according to the similar users api
 
-    # context: content that should be inserted into the template
+    # context: content that should be inserted into the html template
     context = {
         "similar_users": similar_users_qs,
     }
