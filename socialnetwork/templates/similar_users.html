@@ -30,6 +30,7 @@ copilot added this but is probably unnecessary since it's not used:
                 <div>
                     <form action="/sn/api/follow" method="post" style="display:inline;"> <!-- performs "follow" using a "form" -->
                         <input type="hidden" name="user_id" value="{{ user.id }}"> <!-- the user id is hidden but still part of the form and submitted when button is pressed -->
+                        {% csrf_token %}
                         <button type="submit" class="btn btn-secondary">Follow</button>
                     </form>
                 </div>

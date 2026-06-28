@@ -22,6 +22,7 @@
     <!-- Community Mode Toggle -->
     <div class="card" style="margin-bottom: 20px; margin-left: 40px; margin-right: 40px;">
         <form action="/sn/html/toggle_community_mode" method="post" style="display: inline;">
+            {% csrf_token %}
             <button type="submit" class="btn {% if community_mode %}btn-primary{% else %}btn-secondary{% endif %}">
                 {% if community_mode %}Community Mode (ON){% else %}Standard Mode{% endif %} <!-- switches text of the button depending on mode -->
             </button>
@@ -40,6 +41,7 @@
                         <span>{{ community.label }}</span>
                         <form action="/sn/html/leave_community" method="post" style="display: inline;">
                             <input type="hidden" name="community_id" value="{{ community.id }}">
+                            {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-danger">Leave</button>
                         </form>
                     </div>
@@ -62,6 +64,7 @@
                         <span>{{ community.label }}</span>
                         <form action="/sn/html/join_community" method="post" style="display: inline;">
                             <input type="hidden" name="community_id" value="{{ community.id }}">
+                            {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-success">Join</button>
                         </form>
                     </div>
