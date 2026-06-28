@@ -362,3 +362,80 @@ def similar_users(user: SocialNetworkUsers):
     """Compute the similarity of user with all other users. The method returns a QuerySet of FameUsers annotated
     with an additional field 'similarity'. Sort the result in descending order according to 'similarity', in case
     there is a tie, within that tie sort by date_joined (most recent first)"""
+
+    # T5 
+    
+    own_fame_entries = Fame.objects.filter(user=user).select_related(
+        "expertise_area",
+        "fame_level",
+    )
+
+    number_of_own_expertise_areas = own_fame_entries.count()
+
+    if number_of_own_expertise_areas == 0:
+        return FameUsers.objects.none()
+
+    similar_user_scores = []
+
+    for other_user in FameUsers.objects.exclude(id=user.id):
+        matching_expertise_areas = 0
+
+        for own_fame_entry in own_fame_entries:
+            other_fame_entry = Fame.objects.filter(
+                user=other_user,
+                expertise_area=own_fame_entry.expertise_area,
+            ).select_related("fame_level").first()
+
+            if other_fame_entry is None:
+                continue
+
+            fame_difference = abs(
+                own_fame_entry.fame_level.numeric_value
+                - other_fame_entry.fame_level.numeric_value
+            )
+
+            if fame_difference <= 100:
+                matching_expertise_areas += 1
+
+        similarity = matching_expertise_areas / number_of_own_expertise_areas
+
+        if similarity > 0:
+            similar_user_scores.append(
+                (other_user.id, similarity, other_user.date_joined)
+            )
+
+    similar_user_scores.sort(
+        key=lambda entry: (entry[1], entry[2]),
+        reverse=True
+    )
+
+    sorted_user_ids = [entry[0] for entry in similar_user_scores]
+
+    if not sorted_user_ids:
+        return FameUsers.objects.none()
+
+    similarity_annotation = Case(
+        *[
+            When(id=user_id, then=Value(similarity))
+            for user_id, similarity, _date_joined in similar_user_scores
+        ],
+        output_field=FloatField(),
+    )
+
+    ordering_annotation = Case(
+        *[
+            When(id=user_id, then=Value(position))
+            for position, user_id in enumerate(sorted_user_ids)
+        ],
+        output_field=IntegerField(),
+    )
+
+    return (
+        FameUsers.objects
+        .filter(id__in=sorted_user_ids)
+        .annotate(
+            similarity=similarity_annotation,
+            similarity_order=ordering_annotation,
+        )
+        .order_by("similarity_order")
+    )
