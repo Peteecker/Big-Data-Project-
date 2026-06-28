@@ -1,0 +1,68 @@
+1. Appeal System Against Wrong Negative Fame
+
+Idea:
+Users should be able to appeal negative fame entries. If a user loses fame because a post was incorrectly rated as false or 
+misleading, they should be able to request a review.
+
+Why it is useful:
+This would make the system fairer, because automatic ratings or the “Magic AI” can make mistakes.
+
+Critical impact:
+Without an appeal system, the network could become unfair and dangerous, because one wrong classification could have long-term 
+consequences for a user’s reputation. However, an appeal system could also be abused if users constantly challenge every 
+negative rating.
+
+2. Community Moderation by High-Fame Users
+
+Idea:
+Users with very high fame levels, such as Super Pro or higher, could help moderate posts within their expertise area.
+
+Why it is useful:
+This means that questionable content would not only be judged by algorithms, but also by users who have proven expertise in 
+the relevant topic.
+
+Critical impact:
+This could improve the quality of discussions, but it could also create a concentration of power. High-fame users might abuse 
+their position or suppress unpopular opinions.
+
+3. Fame Decay Over Time
+
+Idea:
+Fame should slowly decay over time if a user does not actively contribute to an expertise area anymore.
+
+Why it is useful:
+Knowledge can become outdated. For example, someone who was highly skilled in databases 15 years ago is not automatically 
+still an expert in modern database systems today.
+
+Critical impact:
+This would make fame profiles more realistic, but it could also be unfair to users who are still knowledgeable but do not 
+post frequently.
+
+4. Topic Confidence Instead of Hard Decisions
+
+Idea:
+The Magic AI should not only return expertise areas and truth ratings, but also a confidence score.
+
+Example:
+
+Databases: Truthful, confidence 0.92
+Medicine: Negative, confidence 0.41
+
+Why it is useful:
+If the confidence score is low, the system should react more carefully and not immediately punish the user by lowering their fame.
+
+Critical impact:
+This could reduce unfair punishments caused by uncertain AI decisions. However, it would also make the system more complex, and 
+users would need to understand what confidence scores mean.
+
+5. Positive Fame for High-Quality Contributions
+
+Idea:
+The system should not only punish users for spreading false information, but also reward users for correct and useful posts.
+
+Why it is useful:
+This would motivate users to contribute high-quality content instead of only avoiding negative fame.
+
+Critical impact:
+This could make the network more constructive and less punishment-focused. However, it could also lead to “fame farming”, 
+where users post many simple but correct statements only to increase their fame.
