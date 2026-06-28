@@ -364,7 +364,7 @@ def similar_users(user: SocialNetworkUsers):
     there is a tie, within that tie sort by date_joined (most recent first)"""
 
     # T5 
-    
+
     own_fame_entries = Fame.objects.filter(user=user).select_related(
         "expertise_area",
         "fame_level",
@@ -437,5 +437,5 @@ def similar_users(user: SocialNetworkUsers):
             similarity=similarity_annotation,
             similarity_order=ordering_annotation,
         )
-        .order_by("similarity_order")
+        .order_by("-similarity", "-date_joined")
     )
