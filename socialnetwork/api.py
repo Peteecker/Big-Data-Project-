@@ -369,18 +369,18 @@ def similar_users(user: SocialNetworkUsers):
         "expertise_area",
         "fame_level",
     )
-
+#Retrieve all Fame entries of the current user, including their expertise area and fame level
     number_of_own_expertise_areas = own_fame_entries.count()
 
     if number_of_own_expertise_areas == 0:
         return FameUsers.objects.none()
-
+#If the user has no Fame entries, then return an empty queryset since no comparism is possible
     similar_user_scores = []
 
-    for other_user in FameUsers.objects.exclude(id=user.id):
-        matching_expertise_areas = 0
+    for other_user in FameUsers.objects.exclude(id=user.id): #user comparism between eachother
+        matching_expertise_areas = 0 #Count how many expertise areas are condidered similar
 
-        for own_fame_entry in own_fame_entries:
+        for own_fame_entry in own_fame_entries: #loops through each expertise area of the current user
             other_fame_entry = Fame.objects.filter(
                 user=other_user,
                 expertise_area=own_fame_entry.expertise_area,
@@ -392,13 +392,13 @@ def similar_users(user: SocialNetworkUsers):
             fame_difference = abs(
                 own_fame_entry.fame_level.numeric_value
                 - other_fame_entry.fame_level.numeric_value
-            )
+            ) #Calculates the absolute difference between both users fame levels
 
-            if fame_difference <= 100:
+            if fame_difference <= 100: #Treat the expertise area as matching if the fame difference is at most 100
                 matching_expertise_areas += 1
 
-        similarity = matching_expertise_areas / number_of_own_expertise_areas
-
+        similarity = matching_expertise_areas / number_of_own_expertise_areas #Calculate the similarity as the proportion of matching expertise areas
+#Only keep users with at least one matching expertse area
         if similarity > 0:
             similar_user_scores.append(
                 (other_user.id, similarity, other_user.date_joined)
@@ -407,12 +407,12 @@ def similar_users(user: SocialNetworkUsers):
     similar_user_scores.sort(
         key=lambda entry: (entry[1], entry[2]),
         reverse=True
-    )
+    ) #Sort the user's id, highest first, similarity score and join date
 
     sorted_user_ids = [entry[0] for entry in similar_user_scores]
 
     if not sorted_user_ids:
-        return FameUsers.objects.none()
+        return FameUsers.objects.none() #If no similarity found then return empty queryset
 
     similarity_annotation = Case(
         *[
@@ -420,7 +420,7 @@ def similar_users(user: SocialNetworkUsers):
             for user_id, similarity, _date_joined in similar_user_scores
         ],
         output_field=FloatField(),
-    )
+    ) #Annotate each user with their calculated similarity score
 
     ordering_annotation = Case(
         *[
@@ -428,7 +428,7 @@ def similar_users(user: SocialNetworkUsers):
             for position, user_id in enumerate(sorted_user_ids)
         ],
         output_field=IntegerField(),
-    )
+    )# Basically the same as above but annotates the ranking position instead
 
     return (
         FameUsers.objects
@@ -439,3 +439,4 @@ def similar_users(user: SocialNetworkUsers):
         )
         .order_by("-similarity", "-date_joined")
     )
+#In the end return all similar users ordered by similarity and join date
