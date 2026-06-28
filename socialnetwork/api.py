@@ -34,15 +34,15 @@ def timeline(user: SocialNetworkUsers, start: int = 0, end: int = None, publishe
         #########################
 
         # T4 c
-        posts = Posts.objects.none()            # create empty QuerySet
-        communities_of_user = user.communities.all()    # get all communities of the user
+        posts = Posts.objects.none()                                 # create empty QuerySet
+        communities_of_user = user.communities.all()                 # get all communities of the user
 
-        for community in communities_of_user:           # 2 -> "user is a member of the community" => iterate through only the users communities
-            posts = posts| Posts.objects.filter(        # add posts that follow all the criteria
-                Q(author__communities = community) &                        # 1-> posts in which the author is in that same (current) community
-                Q(expertise_area_and_truth_ratings = community) &            # 3 (Posts -> PostExpertiseAreasAndRatings -> expertise_area) = current cummunity
-                ((Q(published= True)) | Q( author = user))                                     # 4 
-                ).distinct().order_by("-submitted")        # remove duplicates and order by newest post first              
+        for community in communities_of_user:                        # 2 -> "user is a member of the community" => iterate through only the users communities
+            posts = posts| Posts.objects.filter(                     # add posts that follow all the criteria
+                Q(author__communities = community) &                 # 1-> posts in which the author is in that same (current) community
+                Q(expertise_area_and_truth_ratings = community) &    # 3 (Posts -> PostExpertiseAreasAndRatings -> expertise_area) = current cummunity
+                ((Q(published= True)) | Q( author = user))           # 4 
+                ).distinct().order_by("-submitted")                  # remove duplicates and order by newest post first              
 
     else:
         # in standard mode, posts of followed users are displayed
@@ -226,8 +226,13 @@ def submit_post(
 
             # T4 d
             # if the fame level is below Super Pro (=100) -> remove from community 
-            if confuser_level.numeric_value <100:
-                user.communities.remove(expertise_area)
+
+            # if confuser_level.numeric_value <100: 
+            # -> not needed because "Confuser" has an level of -10 <100
+
+            # user.communities.remove(expertise_area) 
+            # -> not needed because T7 checks wether you have a minimum fame level of 100 before joining a community
+            # (because there is no fame entry this user cant be in a community)
 
 
     post.save()
